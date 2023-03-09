@@ -3,8 +3,6 @@ PyAudacity
 
 A Python module to control a running instance of Audacity through its [mod-script-pipe macro system](https://manual.audacityteam.org/man/scripting.html).
 
-The main macros listed on https://manual.audacityteam.org/man/scripting_reference.html are supported, but many still are not. If a function call raises `NotImplementedError`, that function isn't finished yet.
-
 IMPORTANT! If you use this module, please get in touch with al@inventwithpython.com I'd like to hear how people are using it and what changes I can make or features I should prioritize.
 
 Installation
@@ -15,6 +13,12 @@ To install with pip, run:
     pip install pyaudacity
 
 PyAudacity is a pure Python module and has no dependencies, although you must install Audacity. Audacity must be open while your PyAudacity-using Python scripts run. (That is, there is no "headless" mode for PyAudacity.)
+
+IMPORTANT: You must enable the mod-script-pipe module in Audacity before you can use PyAudacity! Launch Audacity, open the Preferences menu, click on the Modules section on the sidebar, and then switch mod-script-pipe from New to Enabled. Then you must restart Audacity.
+
+The mod-script-pipe module comes with Audacity starting in version 3.2.0. If you don't see it in the Modules section, you must... I don't know. [The documentation doesn't say where you can download it.](https://manual.audacityteam.org/man/scripting.html#Getting_Started) If you do have instructions for installing it on Windows, macOS, and Linux, please email al@inventwithpython.com so I can post them here.
+
+
 
 Quickstart Guide
 ----------------

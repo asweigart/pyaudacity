@@ -49,7 +49,7 @@ The names are based on the user interface as they appear in Audacity 3.2.5.
 """
 
 
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 
 import os, sys, time
 from pathlib import Path
@@ -97,7 +97,7 @@ def do(command):  # type: (str) -> str
 
     if not os.path.exists(write_pipe_name):
         raise PyAudacityException(
-            write_pipe_name + ' does not exist.  Ensure Audacity is running with mod-script-pipe.'
+            write_pipe_name + ' does not exist.  Ensure Audacity is running and mod-script-pipe is set to Enabled in the Preferences window.'
         )
         sys.exit()
 
@@ -105,7 +105,7 @@ def do(command):  # type: (str) -> str
     time.sleep(0.0001)
 
     if not os.path.exists(read_pipe_name):
-        raise PyAudacityException(read_pipe_name + ' does not exist.  Ensure Audacity is running with mod-script-pipe.')
+        raise PyAudacityException(read_pipe_name + ' does not exist.  Ensure Audacity is running and mod-script-pipe is set to Enabled in the Preferences window.')
         sys.exit()
 
     # For reasons unknown, we need a slight pause after checking for the existence of the read file on Windows:
