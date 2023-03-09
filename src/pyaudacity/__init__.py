@@ -3,14 +3,57 @@ By Al Sweigart al@inventwithpython.com
 
 A Python module to control a running instance of Audacity through its macro system."""
 
+# TODO - Bring up to the Audacity team that there's no way for the macros to just move the cursor to a timestamp in the project because there's no menu item for this. But there's literally no way to start a new project and create, like, a 1-second silence.
+
+# TODO - Go through and create enums for the enum parameters to help people working with type-aware IDEs.
 
 # TODO - Go through and check the online Audacity documentation for incorrect default
 # values compared to the default values that appear in the various dialog boxes.
+
+# TODO - Need to go through the docstrings and write up my own description (and explain the parameters and units), as well as add a link to the extended online docs.
+
+"""
+NOTE: PyAudacity has a general practice of using names and values from the
+user interface rather than the Audacity macro documentation.
+
+For example, for the LabelSounds macro, instead of the macro parameter names
+we use their UI names:
+    threshold_db    -> threshold_level
+    measurement     -> threshold_measurement
+    sil-dur         -> min_silence_duration
+    snd-dur         -> min_label_interval
+    type            -> label_type
+    pre-offset      -> max_leading_silence
+    post-offset     -> max_trailing_silence
+    text            -> label_text
+
+The same goes for values. For LabelSounds' threshold_measurement argument, we
+take these values:
+    'peak'  -> 'Peak level'
+    'avg'   -> 'Average level'
+    'rms'   -> 'RMS level'
+
+(Enums are also provided for these values.)
+
+The reasoning behind this is that the Audacity macros have very programmer-y
+names instead of descriptive ones. Most likely the user of PyAudacity is going
+to use positional arguments. But if they do use keyword arguments, the code
+might as well be descriptive because code is read more often than it is
+written.
+
+The point of PyAudacity is to be easier to use than the dev just writing
+to Audacity's named pipes themselves, so we might as well lean into that
+direction all the way.
+
+The names are based on the user interface as they appear in Audacity 3.2.5.
+"""
+
 
 __version__ = '0.1.1'
 
 import os, sys, time
 from pathlib import Path
+from enum import Enum
 from typing import Union, Optional
 
 
@@ -112,7 +155,10 @@ def open(filename, add_to_history=False):
     # type: (Union[str, Path], bool) -> str
     """Presents a standard dialog box where you can select either audio files, a list of files (.LOF) or an Audacity Project file to open."""
 
-    if not os.path.exists(filename):
+    if not isinstance(filename, (Path, str)):
+        raise PyAudacityException('filename argument must be a Path or str, not' + str(type(add_to_history)))
+
+    if not Path(filename).exists():
         raise PyAudacityException(str(filename) + ' file not found.')
     if not isinstance(add_to_history, bool):
         raise PyAudacityException('add_to_history argument must be a bool, not' + str(type(add_to_history)))
@@ -122,34 +168,47 @@ def open(filename, add_to_history=False):
 
 def close():
     # type: () -> str
-    """Closes the current project window, prompting you to save your work if you have not saved."""
+    """TODO
+
+    Audacity Documentation: Closes the current project window, prompting you to save your work if you have not saved."""
     return do('Close')
 
 
 def page_setup():
     # type: () -> str
-    """Opens the standard Page Setup dialog box prior to printing."""
+    """TODO
+
+    Audacity Documentation: Opens the standard Page Setup dialog box prior to printing."""
     return do('PageSetup')
 
 
 def print():
     # type: () -> str
-    """Prints all the waveforms in the current project window (and the contents of Label Tracks or other tracks), with the Timeline above. Everything is printed to one page."""
+    """TODO
+
+    Audacity Documentation: Prints all the waveforms in the current project window (and the contents of Label Tracks or other tracks), with the Timeline above. Everything is printed to one page.
+    """
     return do('Print')
 
 
 def exit():
     # type: () -> str
-    """Closes all project windows and exits Audacity. If there are any unsaved changes to your project, Audacity will ask if you want to save them."""
+    """TODO
+
+    Audacity Documentation: Closes all project windows and exits Audacity. If there are any unsaved changes to your project, Audacity will ask if you want to save them.
+    """
     return do('Exit')
 
 
 # The save() function uses the SaveProject2 macro, not the Save macro which only opens the Save dialog.
-def save(filename, add_to_history=False, compress=False):
-    # type: (Union[str, Path], bool, bool) -> str
+def save(filename, add_to_history=False, compress=False, allow_overwrite=True):
+    # type: (Union[str, Path], bool, bool, bool) -> str
     """Saves the current Audacity project .AUP3 file."""
-    if not os.path.exists(filename):
-        raise PyAudacityException(str(filename) + ' file not found.')
+
+    # Audacity will display a pop-up dialog if we try to save with an existing filename.
+    if allow_overwrite and Path(filename).exists():
+        os.unlink(Path(filename))
+
     if not isinstance(add_to_history, bool):
         raise PyAudacityException('add_to_history argument must be a bool, not' + str(type(add_to_history)))
     if not isinstance(compress, bool):
@@ -1430,21 +1489,50 @@ def nyquist():
     return do('Nyquist')
 
 
-def chirp(start_freq=440, end_freq=1320, start_amp=0.8, end_amp=0.1, waveform='Sine', interpolation='Linear'):
-    # type: (float, float, float, float, str, str) -> str
+class ChirpWaveform(Enum):
+    SINE = 'Sine'
+    SQUARE = 'Square'
+    SAWTOOTH = 'Sawtooth'
+    SQUARE_NO_ALIAS = 'Square, no alias'
+    TRIANGLE = 'Triangle'  # Note: This option doesn't appear in the scripting documentation but does in the UI.
+
+
+class ChirpInterpolation(Enum):
+    LINEAR = 'Linear'
+    LOGARITHMIC = 'Logarithmic'
+
+
+def chirp(
+    start_frequency=440,
+    end_frequency=1320,
+    start_amplitude=0.8,
+    end_amplitude=0.1,
+    waveform='Sine',
+    interpolation='Linear',
+):
+    # type: (float, float, float, float, Union[ChirpWaveform, str], Union[ChirpInterpolation, str]) -> str
     """TODO
 
     Audacity Documentation: Generates four different types of tone waveforms like the Tone Generator, but additionally allows setting of the starting and ending amplitude and frequency.
     """
 
-    if not isinstance(start_freq, (float, int)):
-        raise PyAudacityException('start_freq argument must be float or int, not ' + str(type(start_freq)))
-    if not isinstance(end_freq, (float, int)):
-        raise PyAudacityException('end_freq argument must be float or int, not ' + str(type(end_freq)))
-    if not isinstance(start_amp, (float, int)):
-        raise PyAudacityException('start_amp argument must be float or int, not ' + str(type(start_amp)))
-    if not isinstance(end_amp, (float, int)):
-        raise PyAudacityException('end_amp argument must be float or int, not ' + str(type(end_amp)))
+    # Convert enums to strings:
+    if isinstance(waveform, ChirpWaveform):
+        waveform = waveform.value
+    if isinstance(interpolation, ChirpInterpolation):
+        interpolation = interpolation.value
+
+    # Argument type checks:
+    if not isinstance(start_frequency, (float, int)):
+        raise PyAudacityException('start_frequency argument must be float or int, not ' + str(type(start_frequency)))
+    if not isinstance(end_frequency, (float, int)):
+        raise PyAudacityException('end_frequency argument must be float or int, not ' + str(type(end_frequency)))
+    if not isinstance(start_amplitude, (float, int)):
+        raise PyAudacityException('start_amplitude argument must be float or int, not ' + str(type(start_amplitude)))
+    if not isinstance(end_amplitude, (float, int)):
+        raise PyAudacityException('end_amplitude argument must be float or int, not ' + str(type(end_amplitude)))
+
+    # Argument value checks:
     if waveform.lower() not in ('sine', 'square', 'sawtooth', 'square, no alias'):
         raise PyAudacityException(
             'waveform argument must be one of "Sine", "Square", "Sawtooth", or "Square, no alias"'
@@ -1452,50 +1540,102 @@ def chirp(start_freq=440, end_freq=1320, start_amp=0.8, end_amp=0.1, waveform='S
     if interpolation.lower() not in ('linear', 'logarithmic'):
         raise PyAudacityException('interpolation argument must be one of "Linear" or "Logarithmic"')
 
+    if not (0.0 <= start_amplitude <= 1.0):
+        raise PyAudacityException('start_amplitude argument must be between 0.0 and 1.0')
+    if not (0.0 <= end_amplitude <= 1.0):
+        raise PyAudacityException('end_amplitude argument must be between 0.0 and 1.0')
+    if start_frequency < 0:
+        raise PyAudacityException('start_frequency must be positive')
+    if end_frequency < 0:
+        raise PyAudacityException('end_frequency must be positive')
+
+    # Convert str args to their expected case:
     waveform = waveform[0].upper() + waveform[1:].lower()
     interpolation = interpolation.title()
+
+    # Run macro:
     return do(
         'Chirp: StartFreq="{}" EndFreq="{}" StartAmp="{}" EndAmp="{}" Waveform="{}" Interpolation="{}"'.format(
-            start_freq, end_freq, start_amp, end_amp, waveform, interpolation
+            start_frequency, end_frequency, start_amplitude, end_amplitude, waveform, interpolation
         )
     )
 
 
-def dtmf_tones(sequence='audacity', duty_cycle=55, amplitude=0.8):
+def dtmf_tones(DTMF_sequence='audacity', duty_cycle=55, amplitude=0.8):
     # type: (str, float, float) -> str
+    """This macro is broken. The UI specifies Tone/Silence Ratio instead of Duty Cycle,
+    but the macro can't seem to set this. Passing any value for Duty Cycle doesn't have
+    any effect."""
+
+    raise NotImplementedError
+
+    # Old code:
+
     """TODO
 
     Audacity Documentation: Generates dual-tone multi-frequency (DTMF) tones like those produced by the keypad on telephones.
     """
 
-    if not isinstance(sequence, str):
-        raise PyAudacityException('sequence argument must be a str, not ' + str(type(sequence)))
+    if not isinstance(DTMF_sequence, str):
+        raise PyAudacityException('DTMF_sequence argument must be a str, not ' + str(type(DTMF_sequence)))
     if not isinstance(duty_cycle, (float, int)):
         raise PyAudacityException('duty_cycle argument must be float or int, not ' + str(type(duty_cycle)))
     if not isinstance(amplitude, (float, int)):
         raise PyAudacityException('amplitude argument must be float or int, not ' + str(type(amplitude)))
 
-    return do('DtmfTones: Sequence="{}" DutyCycle="{}" Amplitude="{}"'.format(sequence, duty_cycle, amplitude))
+    return do('DtmfTones: Sequence="{}" DutyCycle="{}" Amplitude="{}"'.format(DTMF_sequence, duty_cycle, amplitude))
 
 
-def noise(type='White', amplitude=0.8):  # type: (str, float) -> str
-    """TODO
+class NoiseType(Enum):
+    WHITE = 'White'
+    PINK = 'Pink'
+    BROWNIAN = 'Brownian'
+
+
+def noise(noise_type='White', amplitude=0.8):
+    # type: (Union[NoiseType, str], float) -> str
+    """Fills the selected area with noise.
 
     Audacity Documentation: Generates 'white', 'pink' or 'brown' noise."""
-    if type not in ('White', 'Pink', 'Brownian'):
+
+    # Convert enums to strings:
+    if isinstance(noise_type, NoiseType):
+        noise_type = noise_type.value
+    noise_type = noise_type.title()
+
+    if noise_type not in ('White', 'Pink', 'Brownian'):
         raise PyAudacityException('type argument must be one of "White", "Pink" or "Brownian"')
     if not isinstance(amplitude, (float, int)):
-        raise PyAudacityException('amplitude argument must be float or int, not ' + str(_type(amplitude)))
+        raise PyAudacityException('amplitude argument must be float or int, not ' + str(type(amplitude)))
 
-    return do('Noise: Type="{}" Amplitude="{}"'.format(type, amplitude))
+    # Argument value checks:
+    if not (0.0 <= amplitude <= 1.0):
+        raise PyAudacityException('amplitude argument must be between 0.0 and 1.0')
+
+    return do('Noise: Type="{}" Amplitude="{}"'.format(noise_type, amplitude))
 
 
-def tone(frequency=440, amplitude=0.8, waveform='Sine', interpolation='Linear'):
-    # type: (float, float, str, str) -> str
+class ToneWaveform(Enum):
+    SINE = 'Sine'
+    SQUARE = 'Square'
+    SAWTOOTH = 'Sawtooth'
+    SQUARE_NO_ALIAS = 'Square, no alias'
+    TRIANGLE = 'Triangle'  # Note: This option doesn't appear in the scripting documentation but does in the UI.
+
+
+def tone(frequency=440, amplitude=0.8, waveform='Sine'):
+    # type: (float, float, Union[ToneWaveform, str]) -> str
     """TODO
 
     Audacity Documentation: Generates one of four different tone waveforms: Sine, Square, Sawtooth or Square (no alias), and a frequency between 1 Hz and half the current project rate.
     """
+
+    # TODO - NOTE: The documentation is wrong; there doesn't seem to be an "Interpolation" parameter anymore for Tone.
+
+    # Convert enums to strings:
+    if isinstance(waveform, ToneWaveform):
+        waveform = waveform.value
+
     if not isinstance(frequency, (float, int)):
         raise PyAudacityException('frequency argument must be float or int, not ' + str(type(frequency)))
     if not isinstance(amplitude, (float, int)):
@@ -1504,94 +1644,134 @@ def tone(frequency=440, amplitude=0.8, waveform='Sine', interpolation='Linear'):
         raise PyAudacityException(
             'waveform argument must be one of "Sine", "Square", "Sawtooth", or "Square, no alias"'
         )
-    if interpolation.lower() not in ('linear', 'logarithmic'):
-        raise PyAudacityException('interpolation argument must be one of "Linear" or "Logarithmic"')
 
     waveform = waveform[0].upper() + waveform[1:].lower()
-    interpolation = interpolation.title()
 
-    return do(
-        'Tone: Frequency="{}" Amplitude="{}" Waveform="{}" Interpolation="{}"'.format(
-            frequency, amplitude, waveform, interpolation
-        )
-    )
+    return do('Tone: Frequency="{}" Amplitude="{}" Waveform="{}"'.format(frequency, amplitude, waveform))
 
 
-def pluck(pitch=0, fade='Abrupt', duration=0):
-    # type: (int, str, float) -> str
+class PluckFade(Enum):
+    ABRUPT = 'Abrupt'
+    GRADUAL = 'Gradual'
+
+
+def pluck(pitch=60, fade='Abrupt', duration=1.0):
+    # type: (int, Union[PluckFade, str], float) -> str
     """TODO
 
     Audacity Documentation: A synthesized pluck tone with abrupt or gradual fade-out, and selectable pitch corresponding to a MIDI note.
     """
 
+    # NOTE: A region of a track must be selected. It's not enough to just set the cursor where you want the pluck to begin. The length of the selected region is, however, ignored.
+
+    # Convert enums to strings:
+    if isinstance(fade, PluckFade):
+        fade = fade.value
+    fade = fade.title()
+
     if not isinstance(pitch, int):
         raise PyAudacityException('pitch argument must be int, not ' + str(type(pitch)))
     if not isinstance(duration, (float, int)):
         raise PyAudacityException('duration argument must be float or int, not ' + str(type(duration)))
-    if fade.title() not in ('Abrupt', 'Gradual'):
+    if fade not in ('Abrupt', 'Gradual'):
         raise PyAudacityException('fade argument must be one of "Abrupt" or "Gradual"')
 
-    fade = fade.title()
+    # The user interface says 60 seconds is the max duration.
+    if duration > 60:
+        raise PyAudacityException('duration is larger than the 60 seconds maximum allowed limit')
 
     # Note: The parameter names are lowercase in the documentation so I'm making them lowercase here.
     # https://manual.audacityteam.org/man/scripting_reference.html
     return do('Pluck: pitch="{}" fade="{}" dur="{}"'.format(pitch, fade, duration))
 
 
+class RhythmTrackBeatSound(Enum):
+    METRONOME_TICK = 'Metronome Tick'
+    PING_SHORT = 'Ping (short)'
+    PING_LONG = 'Ping (long)'
+    COWBELL = 'Cowbell'
+    RESONANT_NOISE = 'Resonant Noise'
+    NOISE_CLICK = 'Noise Click'
+    DRIP_SHORT = 'Drip (short)'
+    DRIP_LONG = 'Drip (long)'
+
+
 def rhythm_track(
-    tempo=0, time_signature=0, swing=0, bars=0, click_track_duration=0, offset=0, click_type='Metronome', high=0, low=0
+    tempo=120.0,
+    beats_per_bar=4,
+    swing=0.0,
+    number_of_bars=16,
+    rhythm_track_duration=0,
+    start_time_offset=0,
+    beat_sound='Metronome',
+    pitch_of_strong_beat=84,
+    pitch_of_weak_beat=0,
 ):
-    # type: (float, int, float, int, float, float, str, int, int) -> str
+    # type: (float, int, float, int, float, float, Union[RhythmTrackBeatSound, str], int, int) -> str
     """TODO
 
     Audacity Documentation: Generates a track with regularly spaced sounds at a specified tempo and number of beats per measure (bar).
     """
 
+    # Convert enums to strings:
+    if isinstance(beat_sound, RhythmTrackBeatSound):
+        beat_sound = beat_sound.value
+
     if not isinstance(tempo, (float, int)):
         raise PyAudacityException('tempo argument must be float or int, not ' + str(type(tempo)))
-    if not isinstance(time_signature, int):
-        raise PyAudacityException('time_signature argument must be int, not ' + str(type(time_signature)))
+    if not isinstance(beats_per_bar, int):
+        raise PyAudacityException('beats_per_bar argument must be int, not ' + str(type(beats_per_bar)))
     if not isinstance(swing, (float, int)):
         raise PyAudacityException('swing argument must be float or int, not ' + str(type(swing)))
-    if not isinstance(bars, int):
-        raise PyAudacityException('bars argument must be int, not ' + str(type(bars)))
-    if not isinstance(click_track_duration, (float, int)):
+    if not isinstance(number_of_bars, int):
+        raise PyAudacityException('number_of_bars argument must be int, not ' + str(type(number_of_bars)))
+    if not isinstance(rhythm_track_duration, (float, int)):
         raise PyAudacityException(
-            'click_track_duration argument must be float or int, not ' + str(type(click_track_duration))
+            'rhythm_track_duration argument must be float or int, not ' + str(type(rhythm_track_duration))
         )
-    if not isinstance(offset, (float, int)):
-        raise PyAudacityException('offset argument must be float or int, not ' + str(type(offset)))
-    if click_type.lower() not in (
-        'metronome',
+    if not isinstance(start_time_offset, (float, int)):
+        raise PyAudacityException(
+            'start_time_offset argument must be float or int, not ' + str(type(start_time_offset))
+        )
+    if beat_sound.lower() not in (
+        'metronome tick',
         'ping (short)',
         'ping (long)',
         'cowbell',
-        'resonantnoise',
-        'noiseclick',
+        'resonant noise',
+        'noise click',
         'drip (short)',
         'drip (long)',
     ):
-        raise PyAudacityException('click_type argument must be one of "Abrupt" or "Gradual"')
-    if not isinstance(high, int):
-        raise PyAudacityException('high argument must be int, not ' + str(type(high)))
-    if not isinstance(low, int):
-        raise PyAudacityException('low argument must be int, not ' + str(type(low)))
+        raise PyAudacityException('beat_sound argument must be one of "Abrupt" or "Gradual"')
+    if not isinstance(pitch_of_strong_beat, int):
+        raise PyAudacityException('pitch_of_strong_beat argument must be int, not ' + str(type(pitch_of_strong_beat)))
+    if not isinstance(pitch_of_weak_beat, int):
+        raise PyAudacityException('pitch_of_weak_beat argument must be int, not ' + str(type(pitch_of_weak_beat)))
 
-    click_type = {
-        'metronome': 'Metronome',
+    beat_sound = {
+        'metronome tick': 'Metronome',
         'ping (short)': 'Ping (short)',
         'ping (long)': 'Ping (long)',
         'cowbell': 'Cowbell',
-        'resonantnoise': 'ResonantNoise',
-        'noiseclick': 'NoiseClick',
+        'resonant noise': 'ResonantNoise',
+        'noise click': 'NoiseClick',
         'drip (short)': 'Drip (short)',
         'drip (long)': 'Drip (long)',
-    }[click_type.lower()]
+    }[beat_sound.lower()]
 
     # The documentation has the parameters as lowercase, so I do too:
     return do(
         'RhythmTrack: tempo="{}" timesig="{}" swing="{}" bars="{}" click-track-dur="{}" offset="{}" click-type="{}" high="{}" low="{}"'.format(
-            tempo, time_signature, swing, bars, click_track_duration, offset, click_type, high, low
+            tempo,
+            beats_per_bar,
+            swing,
+            number_of_bars,
+            rhythm_track_duration,
+            start_time_offset,
+            beat_sound,
+            pitch_of_strong_beat,
+            pitch_of_weak_beat,
         )
     )
 
@@ -2183,12 +2363,20 @@ def wahwah(freq=1.5, phase=0.0, depth=70, resonance=2.5, offset=30, gain=-6.0):
     )
 
 
-def adjustable_fade():
+def adjustable_fade(type='Up', curve=0.0, units='Percent', gain0=0, gain1=0, preset='None'):
+    # type: (str, float, str, float, float, str) -> str
     """TODO
 
     Audacity Documentation: Enables you to control the shape of the fade (non-linear fading) to be applied by adjusting various parameters; allows partial (that is not from or to zero) fades up or down.
     """
-    raise NotImplementedError
+
+    # TODO add param checks
+
+    return do(
+        'AdjustableFade: type="{}" curve="{}" units="{}" gain0="{}" gain1="{}" preset="{}"'.format(
+            type, curve, units, gain0, gain1, preset
+        )
+    )
 
 
 def clip_fix(threshold=0.0, gain=0.0):
@@ -2215,43 +2403,64 @@ def crossfade_clips():
     return do('CrossfadeClips')
 
 
-def crossfade_tracks():
+def crossfade_tracks(type='ConstantGain', curve=0.0, direction='Automatic'):
+    # type: (str, float, str) -> str
     """TODO
 
     Audacity Documentation: Use Crossfade Tracks to make a smooth transition between two overlapping tracks one above the other. Place the track to be faded out above the track to be faded in then select the overlapping region in both tracks and apply the effect.
     """
-    raise NotImplementedError
+
+    # TODO - add param checks
+    return do('CrossfadeTracks: type="{}" curve="{}" direction="{}"'.format(type, curve, direction))
 
 
-def delay():
+def delay(delay_type='Regular', d_gain=0.0, delay=0.0, pitch_type='PitchTempo', shift=0.0, number=0, constrain='Yes'):
+    # type: (str, float, float, str, float, int, str) -> str
     """TODO
 
     Audacity Documentation: A configurable delay effect with variable delay time and pitch shifting of the delays."""
-    raise NotImplementedError
+
+    # TODO - add param checks
+
+    return do(
+        'Delay: delay-type="{}" dgain="{}" delay="{}" pitch-type="{}" shift="{}" number="{}" constrain="{}"'.format(
+            delay_type, d_gain, delay, pitch_type, shift, number, constrain
+        )
+    )
 
 
-def highpass_filter():
+def high_pass_filter(frequency=0.0, roll_off='dB6'):
+    # type: (float, str) -> str
     """TODO
 
     Audacity Documentation: Passes frequencies above its cutoff frequency and attenuates frequencies below its cutoff frequency.
     """
-    raise NotImplementedError
+
+    return do('High-passFilter: frequency="{}" rolloff="{}"'.format(frequency, roll_off))
 
 
-def limiter():
+def limiter(type='SoftLimit', gain_left=0, gain_right=0, limit=0, hold=0, makeup='No'):
+    # type: (str, float, float, float, float, str) -> str
     """TODO
 
     Audacity Documentation: Limiter passes signals below a specified input level unaffected or gently reduced, while preventing the peaks of stronger signals from exceeding this threshold. Mastering engineers often use this type of dynamic range compression combined with make-up gain to increase the perceived loudness of an audio recording during the audio mastering process.
     """
-    raise NotImplementedError
+
+    return do(
+        'Limiter: type="{}" gain-L="{}" gain-R="{}" thresh="{}" hold="{}" makeup="{}"'.format(
+            type, gain_left, gain_right, limit, hold, makeup
+        )
+    )
 
 
-def lowpass_filter():
+def low_pass_filter(frequency=0.0, roll_off='db6'):
+    # type: (float, str) -> str
     """TODO
 
     Audacity Documentation: Passes frequencies below its cutoff frequency and attenuates frequencies above its cutoff frequency.
     """
-    raise NotImplementedError
+
+    return do('Low-passFilter: frequency="{}" rolloff="{}"'.format(frequency, roll_off))
 
 
 def notch_filter(frequency=0.0, q=0.0):
@@ -2270,11 +2479,12 @@ def notch_filter(frequency=0.0, q=0.0):
 
 
 def spectral_edit_multi_tool():
+    # type: () -> str
     """TODO
 
     Audacity Documentation: When the selected track is in spectrogram or spectrogram log(f) view, applies a notch filter, high pass filter or low pass filter according to the spectral selection made. This effect can also be used to change the audio quality as an alternative to using Equalization.
     """
-    raise NotImplementedError
+    return do('SpectralEditMultiTool')
 
 
 def spectral_edit_parametric_eq(control_gain=0.0):
@@ -2443,11 +2653,33 @@ def beat_finder(thresval=0):
     return do('BeatFinder: thresval="{}"').format(thresval)
 
 
-def label_sounds():
+def label_sounds(
+    thershold_level=-30,
+    threshold_measurement='Peak level',
+    min_silence_duration=0,
+    min_label_interval=0,
+    label_type='Point before sound',
+    max_leading_silence=0,
+    max_trailing_silence=0,
+    label_text='Sound ##1',
+):
+    # type: (float, str, float, float, str, float, float, str) -> str
     """TODO
 
     Audacity Documentation: Divides up a track by placing labels for areas of sound that are separated by silence."""
-    raise NotImplementedError
+
+    return do(
+        'LabelSounds: threshold="{}" measurement="{}" sil-dur="{}" snd-dur="{}" type="{}" pre-offset="{}" post-offset="{}" text="{}"'.format(
+            thershold_level,
+            threshold_measurement,
+            min_silence_duration,
+            min_label_interval,
+            label_type,
+            max_leading_silence,
+            max_trailing_silence,
+            label_text,
+        )
+    )
 
 
 def manage_tools():
@@ -2480,10 +2712,12 @@ def apply_macro():
     return do('ApplyMacro')
 
 
-def screenshot():
+def screenshot(save_images_to_folder=Path.home(), capture='Window Only', background='None', to_top=True):
     """TODO
 
     Audacity Documentation: A tool, mainly used in documentation, to capture screenshots of Audacity."""
+
+    # TODO - find out what "ToTop" parameter is for. The docs don't say and it doesn't appear in the UI.
     raise NotImplementedError
 
 
@@ -2510,7 +2744,7 @@ def nyquist_prompt(command='', version=3):
     return do('NyquistPrompt: Command="{}" Version="{}"').format(command, version)
 
 
-def nyquist_plugin_installer():
+def nyquist_plugin_installer(files="", overwrite='Disallow'):
     """TODO
 
     Audacity Documentation: A Nyquist plugin that simplifies the installation of other Nyquist plugins."""
@@ -2548,15 +2782,40 @@ def regular_interval_labels(
     ).format(mode, total_num, interval, region, adjust, label_text, zeros, first_number, verbose)
 
 
-def sample_data_export():
+def sample_data_export(
+    export_filename,
+    limit_output_to_first=100,
+    measurement_scale='dB',
+    index_format='None',
+    include_header_information='None',
+    optional_header_text='',
+    channel_layout_for_stereo='L-R on Same Line',
+    show_messages='Yes',
+):
+    # type: (Union[Path, str], int, str, str, str, str, str, str) -> str
     """TODO
 
     Audacity Documentation: Reads the values of successive samples from the selected audio and prints this data to a plain text, CSV or HTML file.
     """
-    raise NotImplementedError
+
+    # TODO - check params
+
+    return do(
+        'SampleDataExport: number="{}" units="{}" filename="{}" fileformat="{}" header="{}" optext="{}" channel-layout="{}" messages="{}"'.format(
+            limit_output_to_first,
+            measurement_scale,
+            export_filename,
+            index_format,
+            include_header_information,
+            optional_header_text,
+            channel_layout_for_stereo,
+            show_messages,
+        )
+    )
 
 
-def sample_data_import():
+def sample_data_import(import_filename, invalid_data_handling='Throw Error'):
+    # type: (Union[Path, str], str) -> str
     """TODO
 
     Audacity Documentation: Reads numeric values from a plain ASCII text file and creates a PCM sample for each numeric value read.
@@ -3323,11 +3582,11 @@ def select_time(start=None, end=None, relative_to=None):
     Audacity Documentation: Modifies the temporal selection. Start and End are time. FromEnd allows selection from the end, which is handy to fade in and fade out a track.
     """
 
-    if not isinstance(start, (NoneType, float, int)):
+    if not isinstance(start, (type(None), float, int)):
         raise PyAudacityException('start argument must be float or int, not ' + str(type(start)))
-    if not isinstance(end, (NoneType, float, int)):
+    if not isinstance(end, (type(None), float, int)):
         raise PyAudacityException('end argument must be float or int, not ' + str(type(end)))
-    if not isinstance(relative_to, str):
+    if not isinstance(relative_to, (type(None), str)):
         raise PyAudacityException('relative_to argument must be str, not ' + str(type(relative_to)))
 
     # TODO check relative_to argument
@@ -3350,11 +3609,10 @@ def select_frequencies(high=None, low=None):
 
     Audacity Documentation: Modifies what frequencies are selected. High and Low are for spectral selection."""
 
-    if not isinstance(high, (NoneType, float, int)):
+    if not isinstance(high, (type(None), float, int)):
         raise PyAudacityException('high argument must be float or int, not ' + str(type(high)))
-    if not isinstance(low, (NoneType, float, int)):
+    if not isinstance(low, (type(None), float, int)):
         raise PyAudacityException('low argument must be float or int, not ' + str(type(low)))
-
 
     # Only include arguments if they are not None. (If they are none, then the selection is "unchanged" according to the documentation.)
     macro_arguments = []
@@ -3466,12 +3724,13 @@ def get_info(type='Commands', format='JSON'):
     Audacity Documentation: Gets information in a list in one of three formats."""
 
     if type.title() not in ('Commands', 'Menus', 'Preferences', 'Tracks', 'Clips', 'Envelopes', 'Labels', 'Boxes'):
-        raise PyAudacityException('type argument must be one of "Commands", "Menus", "Preferences", "Tracks", "Clips", "Envelopes", "Labels", or "Boxes"')
+        raise PyAudacityException(
+            'type argument must be one of "Commands", "Menus", "Preferences", "Tracks", "Clips", "Envelopes", "Labels", or "Boxes"'
+        )
     if format.title() not in ('JSON', 'LISP', 'Brief'):
         raise PyAudacityException('format argument must be one of "JSON", "LISP", or "Brief"')
 
     return do('GetInfo: Type="{}" Format="{}"'.format(type, format))
-
 
 
 def message(text='Some message'):
