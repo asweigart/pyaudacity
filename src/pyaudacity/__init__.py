@@ -2093,7 +2093,11 @@ def bass_and_treble(bass=0, treble=0, gain=0, link_sliders=False):
 
     # TODO - The documentation shows it as "Link Sliders" but I don't know if the space is intentional or not.
     # There's no way to tell since Audacity's macro system doesn't give errors for bad parameter names.
-    return do('BassAndTreble: Bass="{}" Treble="{}" Gain="{}" LinkSliders="{}"'.format(bass, treble, gain, link_sliders))
+    return do(
+        'BassAndTreble: Bass="{}" Treble="{}" Gain="{}" LinkSliders="{}"'.format(
+            bass, treble, gain, link_sliders
+        )
+    )
 
 
 def change_pitch(percentage=0.0, use_high_quality_stretching=False):
@@ -2668,7 +2672,9 @@ def truncate_silence(
         )
 
     return do(
-        'TruncateSilence: Threshold="{}" Action="{}" Minimum="{}" Truncate="{}" Compress="{}" Independent="{}"'.format(threshold, action, minimum, truncate, compress, independent)
+        'TruncateSilence: Threshold="{}" Action="{}" Minimum="{}" Truncate="{}" Compress="{}" Independent="{}"'.format(
+            threshold, action, minimum, truncate, compress, independent
+        )
     )
 
 
@@ -2703,7 +2709,9 @@ def wahwah(freq=1.5, phase=0.0, depth=70, resonance=2.5, offset=30, gain=-6.0):
         )
 
     return do(
-        'Wahwah: Freq="{}" Phase="{}" Depth="{}" Resonance="{}" Offset="{}" Gain="{}"'.format(freq, phase, depth, resonance, offset, gain)
+        'Wahwah: Freq="{}" Phase="{}" Depth="{}" Resonance="{}" Offset="{}" Gain="{}"'.format(
+            freq, phase, depth, resonance, offset, gain
+        )
     )
 
 
@@ -2922,7 +2930,9 @@ def tremolo(wave="Sine", phase=0, wet=0, lfo=0.0):
             "lfo argument must be float or int, not " + str(type(lfo))
         )
 
-    return do('Tremolo: wave="{}" phase="{}" wet="{}" lfo="{}"'.format(wave, phase, wet, lfo))
+    return do(
+        'Tremolo: wave="{}" phase="{}" wet="{}" lfo="{}"'.format(wave, phase, wet, lfo)
+    )
 
 
 def vocal_reduction_and_isolation(
@@ -2951,7 +2961,11 @@ def vocal_reduction_and_isolation(
             + str(type(high_transition))
         )
 
-    return do('TODO: strength="{}" low_transition="{}" high_transition="{}"'.format(strength, low_transition, high_transition))
+    return do(
+        'TODO: strength="{}" low_transition="{}" high_transition="{}"'.format(
+            strength, low_transition, high_transition
+        )
+    )
 
 
 def vocoder(
@@ -2994,7 +3008,9 @@ def vocoder(
         )
 
     return do(
-        'TODO: dst="{}" mst="{}" bands="{}" track-vl="{}" noise-vl="{}" radar-vl="{}" radar-f="{}"'.format(dst, mst, bands, track_vl, noise_vl, radar_vl, radar_f)
+        'TODO: dst="{}" mst="{}" bands="{}" track-vl="{}" noise-vl="{}" radar-vl="{}" radar-f="{}"'.format(
+            dst, mst, bands, track_vl, noise_vl, radar_vl, radar_f
+        )
     )
 
 
@@ -3045,7 +3061,11 @@ def find_clipping(duty_cycle_start=3, duty_cycle_end=3):
             "duty_cycle_end argument must be int, not " + str(type(duty_cycle_end))
         )
 
-    return do('FindClipping: DutyCycleStart="{}" DutyCycleEnd="{}"'.format(duty_cycle_start, duty_cycle_end))
+    return do(
+        'FindClipping: DutyCycleStart="{}" DutyCycleEnd="{}"'.format(
+            duty_cycle_start, duty_cycle_end
+        )
+    )
 
 
 def beat_finder(thresval=0):
@@ -3211,16 +3231,16 @@ def regular_interval_labels(
 
     return do(
         'RegularIntervalLabels: mode="{}" totalnum="{}" interval="{}" region="{}" adjust="{}" labeltext="{}" zeros="{}" firstnum="{}" verbose="{}"'.format(
-        mode,
-        total_num,
-        interval,
-        region,
-        adjust,
-        label_text,
-        zeros,
-        first_number,
-        verbose,
-    )
+            mode,
+            total_num,
+            interval,
+            region,
+            adjust,
+            label_text,
+            zeros,
+            first_number,
+            verbose,
+        )
     )
 
 
