@@ -2620,14 +2620,14 @@ def sliding_stretch(
         )
 
     return do(
-        'TODO: RatePercentChangeStart="{}" RatePercentChangeEnd="{}" PitchHalfStepsStart="{}" PitchHalfStepsEnd="{}" PitchPercentChangeStart="{}" PitchPercentChangeEnd="{}"'
-    ).format(
-        rate_percent_change_start,
-        rate_percent_change_end,
-        pitch_half_steps_start,
-        pitch_half_steps_end,
-        pitch_percent_change_start,
-        pitch_percent_change_end,
+        'TODO: RatePercentChangeStart="{}" RatePercentChangeEnd="{}" PitchHalfStepsStart="{}" PitchHalfStepsEnd="{}" PitchPercentChangeStart="{}" PitchPercentChangeEnd="{}"'.format(
+            rate_percent_change_start,
+            rate_percent_change_end,
+            pitch_half_steps_start,
+            pitch_half_steps_end,
+            pitch_percent_change_start,
+            pitch_percent_change_end,
+        )
     )
 
 
@@ -2668,8 +2668,8 @@ def truncate_silence(
         )
 
     return do(
-        'TruncateSilence: Threshold="{}" Action="{}" Minimum="{}" Truncate="{}" Compress="{}" Independent="{}"'
-    ).format(threshold, action, minimum, truncate, compress, independent)
+        'TruncateSilence: Threshold="{}" Action="{}" Minimum="{}" Truncate="{}" Compress="{}" Independent="{}"'.format(threshold, action, minimum, truncate, compress, independent)
+    )
 
 
 def wahwah(freq=1.5, phase=0.0, depth=70, resonance=2.5, offset=30, gain=-6.0):
@@ -2703,8 +2703,8 @@ def wahwah(freq=1.5, phase=0.0, depth=70, resonance=2.5, offset=30, gain=-6.0):
         )
 
     return do(
-        'Wahwah: Freq="{}" Phase="{}" Depth="{}" Resonance="{}" Offset="{}" Gain="{}"'
-    ).format(freq, phase, depth, resonance, offset, gain)
+        'Wahwah: Freq="{}" Phase="{}" Depth="{}" Resonance="{}" Offset="{}" Gain="{}"'.format(freq, phase, depth, resonance, offset, gain)
+    )
 
 
 def adjustable_fade(
@@ -2847,7 +2847,7 @@ def notch_filter(frequency=0.0, q=0.0):
             "q argument must be float or int, not " + str(type(q))
         )
 
-    return do('NotchFilter: frequency="{}" q="{}"').format(frequency, q)
+    return do('NotchFilter: frequency="{}" q="{}"'.format(frequency, q))
 
 
 def spectral_edit_multi_tool():
@@ -2872,7 +2872,7 @@ def spectral_edit_parametric_eq(control_gain=0.0):
         )
 
     # TODO - double check other macros for parameter names with dashes.
-    return do('SpectralEditParametricEq: control-gain="{}"').format(control_gain)
+    return do('SpectralEditParametricEq: control-gain="{}"'.format(control_gain))
 
 
 def spectral_edit_shelves(control_gain=0.0):
@@ -2887,7 +2887,7 @@ def spectral_edit_shelves(control_gain=0.0):
             "control_gain argument must be float or int, not " + str(type(control_gain))
         )
 
-    return do('SpectralEditShelves: control-gain="{}"').format(control_gain)
+    return do('SpectralEditShelves: control-gain="{}"'.format(control_gain))
 
 
 def studio_fade_out():
@@ -2922,9 +2922,7 @@ def tremolo(wave="Sine", phase=0, wet=0, lfo=0.0):
             "lfo argument must be float or int, not " + str(type(lfo))
         )
 
-    return do('Tremolo: wave="{}" phase="{}" wet="{}" lfo="{}"').format(
-        wave, phase, wet, lfo
-    )
+    return do('Tremolo: wave="{}" phase="{}" wet="{}" lfo="{}"'.format(wave, phase, wet, lfo))
 
 
 def vocal_reduction_and_isolation(
@@ -2953,9 +2951,7 @@ def vocal_reduction_and_isolation(
             + str(type(high_transition))
         )
 
-    return do('TODO: strength="{}" low_transition="{}" high_transition="{}"').format(
-        strength, low_transition, high_transition
-    )
+    return do('TODO: strength="{}" low_transition="{}" high_transition="{}"'.format(strength, low_transition, high_transition))
 
 
 def vocoder(
@@ -2998,8 +2994,8 @@ def vocoder(
         )
 
     return do(
-        'TODO: dst="{}" mst="{}" bands="{}" track-vl="{}" noise-vl="{}" radar-vl="{}" radar-f="{}"'
-    ).format(dst, mst, bands, track_vl, noise_vl, radar_vl, radar_f)
+        'TODO: dst="{}" mst="{}" bands="{}" track-vl="{}" noise-vl="{}" radar-vl="{}" radar-f="{}"'.format(dst, mst, bands, track_vl, noise_vl, radar_vl, radar_f)
+    )
 
 
 # NOTE THE SPELLING OF "ANALYZERS"
@@ -3049,9 +3045,7 @@ def find_clipping(duty_cycle_start=3, duty_cycle_end=3):
             "duty_cycle_end argument must be int, not " + str(type(duty_cycle_end))
         )
 
-    return do('FindClipping: DutyCycleStart="{}" DutyCycleEnd="{}"').format(
-        duty_cycle_start, duty_cycle_end
-    )
+    return do('FindClipping: DutyCycleStart="{}" DutyCycleEnd="{}"'.format(duty_cycle_start, duty_cycle_end))
 
 
 def beat_finder(thresval=0):
@@ -3169,7 +3163,7 @@ def nyquist_prompt(command="", version=3):
             "version argument must be int, not " + str(type(version))
         )
 
-    return do('NyquistPrompt: Command="{}" Version="{}"').format(command, version)
+    return do('NyquistPrompt: Command="{}" Version="{}"'.format(command, version))
 
 
 def nyquist_plugin_installer(files="", overwrite="Disallow"):
@@ -3216,8 +3210,7 @@ def regular_interval_labels(
         )
 
     return do(
-        'RegularIntervalLabels: mode="{}" totalnum="{}" interval="{}" region="{}" adjust="{}" labeltext="{}" zeros="{}" firstnum="{}" verbose="{}"'
-    ).format(
+        'RegularIntervalLabels: mode="{}" totalnum="{}" interval="{}" region="{}" adjust="{}" labeltext="{}" zeros="{}" firstnum="{}" verbose="{}"'.format(
         mode,
         total_num,
         interval,
@@ -3227,6 +3220,7 @@ def regular_interval_labels(
         zeros,
         first_number,
         verbose,
+    )
     )
 
 
