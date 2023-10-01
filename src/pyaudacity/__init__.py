@@ -3728,8 +3728,9 @@ def get_info(info_type='Commands', format='JSON'):
         raise PyAudacityException(
             'info_type argument must be one of "Commands", "Menus", "Preferences", "Tracks", "Clips", "Envelopes", "Labels", or "Boxes"'
         )
-    if format not in ('JSON', 'LISP', 'Brief'):
-        raise PyAudacityException('format argument must be one of "JSON", "LISP", or "Brief"')
+    formats = 'JSON LISP Brief'.split()
+    if format not in formats:
+        raise PyAudacityException('format argument must be one of' + ', '.join([ '"' + f + '"' for f in  formats[:-1]]) + ', and "' + formats[-1] + '"')
 
     return do('GetInfo: Type="{}" Format="{}"'.format(info_type, format))
 
