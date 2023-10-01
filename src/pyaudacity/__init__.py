@@ -3066,7 +3066,7 @@ def beat_finder(thresval=0):
             "thresval argument must be int, not " + str(type(thresval))
         )
 
-    return do('BeatFinder: thresval="{}"').format(thresval)
+    return do('BeatFinder: thresval="{}"'.format(thresval))
 
 
 def label_sounds(
