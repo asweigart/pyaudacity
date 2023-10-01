@@ -2093,7 +2093,7 @@ def bass_and_treble(bass=0, treble=0, gain=0, link_sliders=False):
 
     # TODO - The documentation shows it as "Link Sliders" but I don't know if the space is intentional or not.
     # There's no way to tell since Audacity's macro system doesn't give errors for bad parameter names.
-    return do('BassAndTreble: Bass="{}" Treble="{}" Gain="{}" LinkSliders="{}"')
+    return do('BassAndTreble: Bass="{}" Treble="{}" Gain="{}" LinkSliders="{}"'.format(bass, treble, gain, link_sliders))
 
 
 def change_pitch(percentage=0.0, use_high_quality_stretching=False):
