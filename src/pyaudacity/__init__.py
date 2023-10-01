@@ -2364,7 +2364,7 @@ def wahwah(freq=1.5, phase=0.0, depth=70, resonance=2.5, offset=30, gain=-6.0):
     )
 
 
-def adjustable_fade(type='Up', curve=0.0, units='Percent', gain0=0, gain1=0, preset='None'):
+def adjustable_fade(fade_type='Up', curve=0.0, units='Percent', gain0=0, gain1=0, preset='None'):
     # type: (str, float, str, float, float, str) -> str
     """TODO
 
@@ -2375,7 +2375,7 @@ def adjustable_fade(type='Up', curve=0.0, units='Percent', gain0=0, gain1=0, pre
 
     return do(
         'AdjustableFade: type="{}" curve="{}" units="{}" gain0="{}" gain1="{}" preset="{}"'.format(
-            type, curve, units, gain0, gain1, preset
+            fade_type, curve, units, gain0, gain1, preset
         )
     )
 
@@ -2404,7 +2404,7 @@ def crossfade_clips():
     return do('CrossfadeClips')
 
 
-def crossfade_tracks(type='ConstantGain', curve=0.0, direction='Automatic'):
+def crossfade_tracks(xfade_type='ConstantGain', curve=0.0, direction='Automatic'):
     # type: (str, float, str) -> str
     """TODO
 
@@ -2412,7 +2412,7 @@ def crossfade_tracks(type='ConstantGain', curve=0.0, direction='Automatic'):
     """
 
     # TODO - add param checks
-    return do('CrossfadeTracks: type="{}" curve="{}" direction="{}"'.format(type, curve, direction))
+    return do('CrossfadeTracks: type="{}" curve="{}" direction="{}"'.format(xfade_type, curve, direction))
 
 
 def delay(delay_type='Regular', d_gain=0.0, delay=0.0, pitch_type='PitchTempo', shift=0.0, number=0, constrain='Yes'):
@@ -2440,7 +2440,7 @@ def high_pass_filter(frequency=0.0, roll_off='dB6'):
     return do('High-passFilter: frequency="{}" rolloff="{}"'.format(frequency, roll_off))
 
 
-def limiter(type='SoftLimit', gain_left=0, gain_right=0, limit=0, hold=0, makeup='No'):
+def limiter(limiter_type='SoftLimit', gain_left=0, gain_right=0, limit=0, hold=0, makeup='No'):
     # type: (str, float, float, float, float, str) -> str
     """TODO
 
@@ -2449,7 +2449,7 @@ def limiter(type='SoftLimit', gain_left=0, gain_right=0, limit=0, hold=0, makeup
 
     return do(
         'Limiter: type="{}" gain-L="{}" gain-R="{}" thresh="{}" hold="{}" makeup="{}"'.format(
-            type, gain_left, gain_right, limit, hold, makeup
+            limiter_type, gain_left, gain_right, limit, hold, makeup
         )
     )
 
@@ -3718,20 +3718,20 @@ def set_track():
     raise NotImplementedError
 
 
-def get_info(type='Commands', format='JSON'):
+def get_info(info_type='Commands', format='JSON'):
     # type: (str, str) -> str
     """TODO
 
     Audacity Documentation: Gets information in a list in one of three formats."""
 
-    if type.title() not in ('Commands', 'Menus', 'Preferences', 'Tracks', 'Clips', 'Envelopes', 'Labels', 'Boxes'):
+    if info_type.title() not in ('Commands', 'Menus', 'Preferences', 'Tracks', 'Clips', 'Envelopes', 'Labels', 'Boxes'):
         raise PyAudacityException(
-            'type argument must be one of "Commands", "Menus", "Preferences", "Tracks", "Clips", "Envelopes", "Labels", or "Boxes"'
+            'info_type argument must be one of "Commands", "Menus", "Preferences", "Tracks", "Clips", "Envelopes", "Labels", or "Boxes"'
         )
     if format.title() not in ('JSON', 'LISP', 'Brief'):
         raise PyAudacityException('format argument must be one of "JSON", "LISP", or "Brief"')
 
-    return do('GetInfo: Type="{}" Format="{}"'.format(type, format))
+    return do('GetInfo: Type="{}" Format="{}"'.format(info_type, format))
 
 
 def message(text='Some message'):
