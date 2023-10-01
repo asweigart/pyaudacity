@@ -2996,7 +2996,19 @@ def vocoder(
         raise PyAudacityException(
             "dst argument must be float or int, not " + str(type(dst))
         )
-    # TODO check mst
+
+    msts = "BothChannels RightOnly".split()
+
+
+    if mst not in msts:
+        raise PyAudacityException(
+            "mst must be one of "
+            + ", ".join(msts)
+            + ", but was: '"
+            + mst
+            + "'."
+        )
+
     if not isinstance(bands, int):
         raise PyAudacityException("bands argument must be int, not " + str(type(bands)))
     if not isinstance(track_vl, (float, int)):
@@ -3017,7 +3029,7 @@ def vocoder(
         )
 
     return do(
-        'TODO: dst="{}" mst="{}" bands="{}" track-vl="{}" noise-vl="{}" radar-vl="{}" radar-f="{}"'.format(
+        'Vocoder: dst="{}" mst="{}" bands="{}" track-vl="{}" noise-vl="{}" radar-vl="{}" radar-f="{}"'.format(
             dst, mst, bands, track_vl, noise_vl, radar_vl, radar_f
         )
     )
