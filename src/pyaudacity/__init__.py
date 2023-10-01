@@ -2944,7 +2944,16 @@ def vocal_reduction_and_isolation(
     Audacity Documentation: Attempts to remove or isolate center-panned audio from a stereo track. Most "Remove" options in this effect preserve the stereo image.
     """
 
-    # TODO check action
+    actions = "RemoveToMono Remove Isolate IsolateInvert RemoveCenterToMono RemoveCenter IsolateCenter IsolateCenterInvert Analyze".split()
+
+    if action not in actions:
+        raise PyAudacityException(
+            "action must be one of "
+            + ", ".join(actions)
+            + ", but was: '"
+            + action
+            + "'."
+        )
 
     if not isinstance(strength, (float, int)):
         raise PyAudacityException(
@@ -2962,7 +2971,7 @@ def vocal_reduction_and_isolation(
         )
 
     return do(
-        'TODO: strength="{}" low_transition="{}" high_transition="{}"'.format(
+        'VocalReductionAndIsolation: strength="{}" low_transition="{}" high_transition="{}"'.format(
             strength, low_transition, high_transition
         )
     )
