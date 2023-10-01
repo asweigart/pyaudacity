@@ -2624,7 +2624,7 @@ def sliding_stretch(
         )
 
     return do(
-        'TODO: RatePercentChangeStart="{}" RatePercentChangeEnd="{}" PitchHalfStepsStart="{}" PitchHalfStepsEnd="{}" PitchPercentChangeStart="{}" PitchPercentChangeEnd="{}"'.format(
+        'SlidingStretch: RatePercentChangeStart="{}" RatePercentChangeEnd="{}" PitchHalfStepsStart="{}" PitchHalfStepsEnd="{}" PitchPercentChangeStart="{}" PitchPercentChangeEnd="{}"'.format(
             rate_percent_change_start,
             rate_percent_change_end,
             pitch_half_steps_start,
