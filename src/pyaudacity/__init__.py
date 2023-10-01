@@ -61,6 +61,7 @@ from typing import Union, Optional
 _open = open
 _type = type
 _format = format
+_print = print
 
 
 class PyAudacityException(Exception):
