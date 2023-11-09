@@ -97,22 +97,20 @@ def do(command):  # type: (str) -> str
         read_pipe_name = "/tmp/audacity_script_pipe.from." + str(os.getuid())
         eol = "\n"
 
-    if not os.path.exists(write_pipe_name):
-        raise PyAudacityException(
-            write_pipe_name
-            + " does not exist.  Ensure Audacity is running and mod-script-pipe is set to Enabled in the Preferences window."
-        )
-        sys.exit()
+    for pipe in [write_pipe_name, read_pipe_name]:
+        # on macos it sometimes takes more than 0.1ms for the pipe(s) to be ready
+        for wait in [0.0001, 0.1, 0.2, 0.4, 0.8, 1.0]:
+            time.sleep(wait)
+            if os.path.exists(pipe):
+                # sys.stderr.write(f".Waited {wait} seconds\n") # DEBUG/note
+                break
 
-    # For reasons unknown, we need a slight pause after checking for the existence of the read file on Windows:
-    time.sleep(0.0001)
-
-    if not os.path.exists(read_pipe_name):
-        raise PyAudacityException(
-            read_pipe_name
-            + " does not exist.  Ensure Audacity is running and mod-script-pipe is set to Enabled in the Preferences window."
-        )
-        sys.exit()
+        if not pipe:
+            raise PyAudacityException(
+                pipe
+                + " does not exist.  Ensure Audacity is running and mod-script-pipe is set to Enabled in the Preferences window."
+            )
+            sys.exit()
 
     # For reasons unknown, we need a slight pause after checking for the existence of the read file on Windows:
     time.sleep(0.0001)
