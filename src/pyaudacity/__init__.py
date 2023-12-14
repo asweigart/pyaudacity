@@ -3686,11 +3686,37 @@ def set_envelope():
     raise NotImplementedError
 
 
-def set_label():
-    """TODO
+def set_label(label=None, text=None, start=None, end=None, selected=None):
+    """Modifies an existing label.
 
-    Audacity Documentation: Modifies an existing label. You must give it the label number."""
-    raise NotImplementedError
+    Audacity Documentation: Modifies an existing label. You must give it the label number.
+    """
+    if not isinstance(label, (type(None), int)):
+        raise PyAudacityException('label argument must be int, not ' + str(type(label)))
+    if not isinstance(text, (type(None), str)):
+        raise PyAudacityException('text argument must be str, not ' + str(type(label)))
+    if not isinstance(start, (type(None), float, int)):
+        raise PyAudacityException('start argument must be float or int, not ' + str(type(start)))
+    if not isinstance(end, (type(None), float, int)):
+        raise PyAudacityException('end argument must be float or int, not ' + str(type(end)))
+    if not isinstance(selected, (type(None), bool)):
+        raise PyAudacityException('selected argument must be bool, not ' + str(type(end)))
+
+    if label is None:
+        label = 0
+
+    macro_arguments = ['Label="{}"'.format(label)]
+    if text is not None:
+        macro_arguments.append('Text="{}"'.format(text))
+    if start is not None:
+        macro_arguments.append('Start="{}"'.format(start))
+    if end is not None:
+        macro_arguments.append('End="{}"'.format(end))
+    if selected is not None:
+        macro_arguments.append('Selected="{}"'.format(int(selected)))
+
+    return do('SetLabel: ' + ' '.join(macro_arguments))
+
 
 
 def set_project():
